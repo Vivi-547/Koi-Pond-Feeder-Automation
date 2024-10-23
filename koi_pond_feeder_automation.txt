@@ -1,0 +1,45 @@
+
+// Pin assignments
+const int waterLevelSensorPin = 2;  // Digital pin for water level sensor
+const int pumpRelayPin = 3;         // Relay pin for water pump control
+const int feederRelayPin = 4;       // Relay pin for feeder motor control
+
+// Timing variables
+unsigned long previousFeedTime = 0;
+const unsigned long feedInterval = 6 * 60 * 60 * 1000;  // Feed every 6 hours
+
+void setup() {
+  pinMode(waterLevelSensorPin, INPUT);
+  pinMode(pumpRelayPin, OUTPUT);
+  pinMode(feederRelayPin, OUTPUT);
+
+  digitalWrite(pumpRelayPin, HIGH);  // Pump off initially (relay logic HIGH)
+  digitalWrite(feederRelayPin, HIGH); // Feeder off initially (relay logic HIGH)
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Check water level
+  int waterLevel = digitalRead(waterLevelSensorPin);
+
+  if (waterLevel == HIGH) {
+    Serial.println("Water level high - Activating pump");
+    digitalWrite(pumpRelayPin, LOW);  // Turn on pump (relay logic LOW)
+  } else {
+    Serial.println("Water level low - Pump off");
+    digitalWrite(pumpRelayPin, HIGH); // Turn off pump (relay logic HIGH)
+  }
+
+  // Feeder control based on time interval
+  unsigned long currentTime = millis();
+  if (currentTime - previousFeedTime >= feedInterval) {
+    previousFeedTime = currentTime;
+    Serial.println("Feeding time - Activating feeder");
+    digitalWrite(feederRelayPin, LOW);  // Turn on feeder (relay logic LOW)
+    delay(5000);  // Feeder motor runs for 5 seconds
+    digitalWrite(feederRelayPin, HIGH); // Turn off feeder (relay logic HIGH)
+  }
+
+  delay(1000);  // Loop delay for sensor reading stability
+}
